@@ -98,7 +98,10 @@ class HandPoseEstimator(PoseEstimator):
     self.last_normal = None
     self.decay = 0.95
     self.normal_rot = None
+    self.last_depth = None
 
+    self.zero_pos = None
+    
     self.position = None
     self.rotation = None
 
@@ -148,10 +151,20 @@ class HandPoseEstimator(PoseEstimator):
       depth_height, depth_width = self.depth.shape
       print(f"Depth shape: {self.depth.shape}")
       print(f"input shape: {rgb_image.shape}")
+      
+      depth_values = np.array([self.depth[int(min(l.y, 1.0)*(depth_height-1)),int(min(1.0, l.x)*(depth_width-1))] for l in hand_landmarks])
+      
+      if not self.last_depth is None:
+          depth_values = self.decay * self.last_depth + (1-self.decay)*depth_values
+          
+      self.last_depth = depth_values
       points = np.array([ [ l.x for l in hand_landmarks],
-                [ l.y for l in hand_landmarks],
-                [ self.depth[int(min(l.y, 1.0)*(depth_height-1)),int(min(1.0, l.x)*(depth_width-1))] for l in hand_landmarks]  ])
-      transformed_points = world_R @ points
+                depth_values.tolist(),
+                [ (1 - l.y) - 0.2 for l in hand_landmarks ]])
+      transformed_points = points #world_R @ points
+      
+      if not self.zero_pos is None:
+        transformed_points -= self.zero_pos
       
       new_position = points[:, 0]
       new_rotation = angles
@@ -226,6 +239,9 @@ class HandPoseEstimator(PoseEstimator):
           break
       if key == ord('c') and not self.last_normal is None:
         self.normal_rot = calculate_rotation_matrix(self.last_normal)
+      if key == ord('p') and not self.position is None:
+        self.zero_pos = np.zeros(3)
+        self.zero_pos[1] = self.position[1]
     return last_timestamp
 
 if __name__ == "__main__":
