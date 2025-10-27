@@ -1,15 +1,12 @@
 import numpy as np
 import cv2
 import time
-import torch
 
 import mediapipe as mp
 from mediapipe.tasks import python
 from mediapipe.tasks.python import vision
 from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
-import matplotlib.pyplot as plt
-import matplotlib.animation as animation
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 from pose_estimator import PoseEstimator
@@ -17,6 +14,7 @@ from pose_estimator import PoseEstimator
 from transformers import AutoImageProcessor, AutoModelForDepthEstimation
 from opencv_capture import BufferlessCapture
 
+import torch
 device = torch.device('cuda')
 print(device)
 image_processor = AutoImageProcessor.from_pretrained("depth-anything/Depth-Anything-V2-small-hf", use_fast=True)
@@ -79,7 +77,7 @@ class HandPoseEstimator(PoseEstimator):
         # Initialization of the image
         self.annotated_image = np.zeros((640,480,3), np.uint8)
 
-        self.cap = BufferlessCapture(2)
+        self.cap = BufferlessCapture(0)
         #cap = cv2.VideoCapture("hand_forward.mp4")
         # Create an HandLandmarker object
         VisionRunningMode = mp.tasks.vision.RunningMode
