@@ -2,10 +2,12 @@ from abc import ABC, abstractmethod
 import threading
 import time
 import numpy as np
+from scipy.spatial.transform import Rotation as R
 
 class PoseEstimator(ABC):
     def __init__(self):
         self.latest_deltas = None
+        self.current_position = None
         self.thread = None
         self.stop_requested = False
         
@@ -35,3 +37,32 @@ class MockEstimator(PoseEstimator):
             time.sleep(0.1)
             self.latest_deltas = np.concatenate([-np.array([0.1, 0.05, 0.01]), np.array([0.1, 0, 0])])
 
+class CircleEstimator(PoseEstimator):
+    def __init__(self):
+        super().__init__()
+        self.position = np.array([0.5, 0.5, 0.5])
+        self.rotation = R.from_euler('XYZ', [0.1, 0, 0])
+
+
+    def run(self):
+        while not self.stop_requested:
+            new_position = self.rotation.apply(self.position)
+            delta_pos = new_position - self.position
+            self.latest_deltas = np.concatenate([delta_pos, np.array([0.05, 0.05, 0.05])])
+            self.position = new_position
+            time.sleep(0.1)
+
+class RotatorEstimator(PoseEstimator):
+    def __init__(self, rotation_delta):
+        super().__init__()
+        self.position = np.array([0.5, 0.5, 0.5])
+        self.rotation = np.zeros(3)
+        self.rotation_delta = rotation_delta
+        self.current_position = np.zeros(6)
+
+
+    def run(self):
+        while not self.stop_requested:
+            self.latest_deltas = np.concatenate([np.zeros(3), self.rotation_delta])
+            self.current_position += np.concatenate([np.zeros(3), self.rotation_delta])
+            time.sleep(0.1)
