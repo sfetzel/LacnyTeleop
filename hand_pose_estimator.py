@@ -9,6 +9,8 @@ from mediapipe import solutions
 from mediapipe.framework.formats import landmark_pb2
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+
+from orientation import convert_hand_landmarks, calculate_normal
 from pose_estimator import PoseEstimator
 
 from transformers import AutoImageProcessor, AutoModelForDepthEstimation
@@ -77,13 +79,13 @@ class HandPoseEstimator(PoseEstimator):
         # Initialization of the image
         self.annotated_image = np.zeros((640,480,3), np.uint8)
 
-        self.cap = BufferlessCapture(0)
+        self.cap = BufferlessCapture(2)
         #cap = cv2.VideoCapture("hand_forward.mp4")
         # Create an HandLandmarker object
         VisionRunningMode = mp.tasks.vision.RunningMode
         options = vision.HandLandmarkerOptions(base_options=python.BaseOptions(model_asset_path=model_path_full),
                                             running_mode=VisionRunningMode.VIDEO,
-                                            num_hands=2,
+                                            num_hands=1,
                                             min_hand_detection_confidence=0.5,
                                             min_hand_presence_confidence=0.5,
                                             min_tracking_confidence=0.5)
@@ -121,15 +123,8 @@ class HandPoseEstimator(PoseEstimator):
 
             hand_points = [ np.array([l.x, 1-l.y, l.z]) for l in hand_landmarks ]
 
-            normals = [
-                calc_normal(hand_points[0], hand_points[5], hand_points[9]),
-                calc_normal(hand_points[0], hand_points[9], hand_points[13]),
-                calc_normal(hand_points[0], hand_points[13], hand_points[17]),
-                calc_normal(hand_points[0], hand_points[5], hand_points[17]),
-            ]
-            normal = np.array(normals).mean(axis=0)
-            normal = normal / np.linalg.norm(normal)
-            #normal = np.round(normal * 8) / 8
+            points = convert_hand_landmarks(hand_landmarks)
+            normal = calculate_normal(points)
 
             if not self.last_normal is None:
                 normal = self.decay*self.last_normal + (1-self.decay)*normal
@@ -151,7 +146,7 @@ class HandPoseEstimator(PoseEstimator):
             depth_values = np.array([depth[int(min(l.y, 1.0)*(depth_height-1)),int(min(1.0, l.x)*(depth_width-1))] for l in hand_landmarks])
 
             points = np.array([ [ (1-l.x) for l in hand_landmarks],
-                                ((depth_values-0.5)*4).tolist(),
+                                ((depth_values-0.5)*5).tolist(),
                                 [ (1 - l.y) - 0.4 for l in hand_landmarks ]])
             transformed_points = points #world_R @ points
 

@@ -1,6 +1,8 @@
 # LacnýTeleop
 Simple teleoperation via webcam using hand pose recognition from MediaPipe and monocular depth estimation from DepthAnythingV2
 
+![](teleop_demo_short.gif)
+
 ## Install
 - `pip install -r requirements.txt`
 

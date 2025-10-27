@@ -52,20 +52,9 @@ def convert_hand_landmarks(hand_landmarks):
 
 def calculate_normal(hand_points: list[list]) -> np.ndarray:
     points = np.array([
-        hand_points[0], hand_points[5], hand_points[9],
-        hand_points[13], hand_points[17],
+        hand_points[0], hand_points[5], hand_points[17],
     ])
     # direction normal is calculated from pinky to index finger, so the orientation is correct.
-    direction_normal = calc_normal(points[0, :], points[-1, :], points[1, :])
-    print(to_text(points[0, :]))
-    print(to_text(points[-1, :]))
-    print(to_text(points[1, :]))
-    normal, coefficients = calculate_plane_normal(points)
-    print(normal)
-    if direction_normal.reshape(1,3) @ normal.reshape(3,1) < 0:
-        print("mirror")
-        #normal = mirror_point(coefficients[0], coefficients[1], coefficients[2], coefficients[3], normal[0], normal[1], normal[2])
-        normal = -normal
-        print(normal)
-    direction_normal[1] *= -1
-    return direction_normal
+    normal = calc_normal(points[0, :], points[-1, :], points[1, :])
+    normal[1] *= -1
+    return normal

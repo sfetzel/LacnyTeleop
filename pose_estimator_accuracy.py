@@ -17,9 +17,9 @@ mesh_frame = o3d.geometry.TriangleMesh.create_coordinate_frame(size=1.0)
 visualizer.add_geometry(mesh_frame)
 
 box_size = 0.1
-target_box :o3d.geometry.TriangleMesh = o3d.geometry.TriangleMesh().create_box(box_size, box_size, box_size)
+target_box :o3d.geometry.TriangleMesh = o3d.geometry.TriangleMesh().create_box(box_size*0.95, box_size*0.95, box_size*0.95)
 target_box.translate(np.array([-box_size / 2, -box_size / 2, -box_size / 2]), relative=True)
-target_pos = np.array([0.5, 0.5, 0])
+target_pos = np.array([0.25, 0.25, 0])
 target_box.translate(target_pos, relative=False)
 target_box.paint_uniform_color(np.array([1.0, 0, 0]))
 
