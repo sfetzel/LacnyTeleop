@@ -1,13 +1,15 @@
 from abc import ABC, abstractmethod
 import threading
 import time
+from typing import Optional
+
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
 class PoseEstimator(ABC):
     def __init__(self):
         self.latest_deltas = None
-        self.current_position = None
+        self.current_position: Optional[np.ndarray] = None
         self.thread = None
         self.stop_requested = False
         
@@ -30,6 +32,17 @@ class PoseEstimator(ABC):
         if not self.thread is None:
             self.stop_requested = True
             self.thread.join()
+
+    def set_position_and_update_deltas(self, new_position):
+        if self.current_position is not None:
+            delta = new_position - self.current_position
+
+            if self.latest_deltas is None:
+                self.latest_deltas = delta
+            else:
+                self.latest_deltas += delta
+
+        self.current_position = new_position.copy()
 
 class MockEstimator(PoseEstimator):
     def run(self):

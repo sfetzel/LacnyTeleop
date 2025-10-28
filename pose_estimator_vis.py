@@ -44,7 +44,7 @@ def update_points(frame):
     global point, rotation
     result = estimator.get_deltas()
     if not result is None:
-        rotation += result[3:]
+        rotation += result[3:6]
         point += result[:3]
         
         r = R.from_euler('xyz', rotation, degrees=False)

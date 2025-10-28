@@ -19,5 +19,8 @@ def cart2sph(vec):
     az = np.arctan2(y,x) /np.pi*180                           # phi
     return r, polar, az
 
+def to_image_indices(relative_coordinate, length: int) -> int:
+    return int(max(0, min(relative_coordinate, 1.0)) * (length - 1))
+
 def to_text(vector):
     return f"({vector[0]}, {vector[1]}, {vector[2]})"

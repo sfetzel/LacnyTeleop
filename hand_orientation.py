@@ -6,7 +6,7 @@ import os
 
 from hands_detection.mp_hands import MediaPipeHandPose, VisionRunningMode
 from orientation import calculate_normal, convert_hand_landmarks
-from utils import cart2sph, to_text
+from utils.utils import cart2sph, to_text
 
 detector = MediaPipeHandPose(min_hand_detected_confidence=0.3, min_hand_presence_confidence=0.3,
                              running_mode=VisionRunningMode.IMAGE)
