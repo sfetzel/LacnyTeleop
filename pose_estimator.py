@@ -1,3 +1,4 @@
+import enum
 from abc import ABC, abstractmethod
 import threading
 import time
@@ -5,6 +6,11 @@ from typing import Optional
 
 import numpy as np
 from scipy.spatial.transform import Rotation as R
+
+class GripperState(enum.Enum):
+    Closed = -1.0
+    Open = 1.0
+
 
 class PoseEstimator(ABC):
     def __init__(self):
@@ -41,6 +47,9 @@ class PoseEstimator(ABC):
                 self.latest_deltas = delta
             else:
                 self.latest_deltas += delta
+
+            # the gripper value is absolute.
+            self.latest_deltas[-1] = new_position[-1]
 
         self.current_position = new_position.copy()
 

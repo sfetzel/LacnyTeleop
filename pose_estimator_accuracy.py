@@ -5,12 +5,14 @@ import time
 import numpy as np
 import open3d as o3d
 from scipy.spatial.transform import Rotation as R
-from pose_estimator import MockEstimator, CircleEstimator, RotatorEstimator
+from pose_estimator import MockEstimator, CircleEstimator, RotatorEstimator, GripperState
 from hand_pose_estimator import HandPoseEstimator
 
 parser = argparse.ArgumentParser(
                     prog='LacnyTeleop',
-                    description='Shows a target box in blue and a red box corresponding to the recognized hand pose. Try to bring the red box to the blue box.')
+                    description='Shows a target box in blue and a red box corresponding to the recognized hand pose.'
+                                'Try to bring the red box to the blue box. Bring your fingers and thumb together to read the distance.'
+                                'If the distance is small enough the target box will move to a new location.')
 parser.add_argument('--opencv_device', default=0)
 
 args = parser.parse_args()
@@ -37,9 +39,10 @@ pose_box = o3d.geometry.TriangleMesh().create_box(box_size, box_size, box_size)
 pose_box.paint_uniform_color(np.array([0.0, 0, 1.0]))
 
 prev_rotation = None
+last_gripper_state = None
 
 def update_box(vis) -> bool:
-    global prev_rotation, target_pos
+    global prev_rotation, target_pos, last_gripper_state
     target = estimator.current_position
 
     if not target is None:
@@ -52,16 +55,21 @@ def update_box(vis) -> bool:
         prev_rotation = rot_matrix
         vis.update_geometry(pose_box)
 
-        distance = np.linalg.norm(target[:3] - target_pos)
-        if distance < 0.2:
-            print(f"Distance to target: {distance}")
-        if distance < 0.04:
-            print(f"Well done, distance to target: {distance}")
-            target_pos = np.array([random.uniform(0.1, 0.5),
-                                   random.uniform(0.1, 0.5),
-                                   random.uniform(0.1, 0.25)])
-            target_box.rotate(target_box.get_rotation_matrix_from_xyz(np.random.uniform(0, 50.0, 3)))
-            target_box.translate(target_pos, relative=False)
+        if target[-1] != last_gripper_state:
+            print(f"Gripper is: {"Closed" if target[-1] == GripperState.Closed.value else "Open"}")
+        last_gripper_state = target[-1]
+
+        if target[-1] == GripperState.Closed.value:
+            distance = np.linalg.norm(target[:3] - target_pos)
+            if distance < 0.2:
+                print(f"Distance to target: {distance}")
+            if distance < 0.04:
+                print(f"Well done, distance to target: {distance}")
+                target_pos = np.array([random.uniform(0.1, 0.5),
+                                       random.uniform(0.1, 0.5),
+                                       random.uniform(0.1, 0.25)])
+                target_box.rotate(target_box.get_rotation_matrix_from_xyz(np.random.uniform(0, 50.0, 3)))
+                target_box.translate(target_pos, relative=False)
 
     time.sleep(0.1)
     return not target is None

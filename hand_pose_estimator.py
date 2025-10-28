@@ -7,7 +7,7 @@ from scipy.spatial.transform import Rotation as R
 from depth_estimator import DepthAnythingEstimator
 from hands_detection.mp_hands import MediaPipeHandPose, VisionRunningMode
 from orientation import convert_hand_landmarks, calculate_normal
-from pose_estimator import PoseEstimator
+from pose_estimator import PoseEstimator, GripperState
 
 from utils.opencv_capture import BufferlessCapture
 from utils.utils import calculate_rotation_matrix, to_image_indices
@@ -24,7 +24,7 @@ class HandPoseEstimator(PoseEstimator):
         self.normal_rot = None
         self.is_gripper_closed = False
         self.depth_estimator = DepthAnythingEstimator(True, self.decay)
-        self.finger_distance_threshold = 0.1
+        self.finger_distance_threshold = 0.06
 
         self.zero_pos = np.array([0, 0.5, 0.5])
         self.stretch_factors = np.array(stretch_factors if stretch_factors is not None else [1.0, 2.0, 1.0])
@@ -53,9 +53,6 @@ class HandPoseEstimator(PoseEstimator):
         ring_to_thumb_distance = np.linalg.norm(pts[4, :] - pts[16, :])
         mean_distance = (index_to_thumb_distance + middle_to_thumb_distance + ring_to_thumb_distance) / 3.0
         new_is_gripper_closed = mean_distance < self.finger_distance_threshold
-
-        if new_is_gripper_closed != self.is_gripper_closed:
-            print(f"Gripper closed: {new_is_gripper_closed}")
         self.is_gripper_closed = new_is_gripper_closed
 
         center_of_palm = (pts[0, :] + pts[5, :] + pts[9, :] + pts[13, :] + pts[17, :]) / 5.0
@@ -69,11 +66,10 @@ class HandPoseEstimator(PoseEstimator):
         ])
         new_location -= self.zero_pos
         new_location = new_location * self.stretch_factors
-        gripper_value = -1.0 if self.is_gripper_closed else 1.0
-        new_location = np.append(new_location, [gripper_value])
+        gripper_value = GripperState.Closed.value if self.is_gripper_closed else GripperState.Open.value
         new_rotation = angles
 
-        new_position = np.concatenate([new_location, new_rotation])
+        new_position = np.concatenate([new_location, new_rotation, np.array([gripper_value])])
         self.set_position_and_update_deltas(new_position)
 
     def run(self):
