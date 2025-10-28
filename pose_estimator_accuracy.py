@@ -6,7 +6,7 @@ from scipy.spatial.transform import Rotation as R
 from pose_estimator import MockEstimator, CircleEstimator, RotatorEstimator
 from hand_pose_estimator import HandPoseEstimator
 
-estimator = HandPoseEstimator()
+estimator = HandPoseEstimator(2)
 #estimator = RotatorEstimator(np.array([0.1,0.1,0.1]))
 estimator.start()
 

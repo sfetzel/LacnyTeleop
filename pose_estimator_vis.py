@@ -6,7 +6,8 @@ from hand_pose_estimator import HandPoseEstimator
 import threading
 from scipy.spatial.transform import Rotation as R
 import matplotlib.animation as animation
-estimator = HandPoseEstimator("hand_landmarker.task")
+
+estimator = HandPoseEstimator(2)
 #estimator = MockEstimator()
 estimator.start()
 
@@ -85,6 +86,6 @@ ani = animation.FuncAnimation(fig=fig, func=update_points, frames=400, interval=
 
 plt.show()
 plt.close()
-print("closedf")
+
 estimator.stop()
 print("Stopped estimator")
