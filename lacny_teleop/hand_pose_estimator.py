@@ -9,7 +9,7 @@ from .hands_detection.mp_hands import MediaPipeHandPose, VisionRunningMode
 from .orientation import convert_hand_landmarks, calculate_normal
 from .pose_estimator import PoseEstimator, GripperState
 
-from .utils.opencv_capture import BufferlessCapture
+from .utils.opencv_capture import BufferlessCapture, DirectCapture
 from .utils.utils import calculate_rotation_matrix, to_image_indices
 
 
@@ -17,7 +17,7 @@ class HandPoseEstimator(PoseEstimator):
 
     def __init__(self, capture_name, stretch_factors: list = None) -> None:
         super(HandPoseEstimator, self).__init__()
-        self.cap = BufferlessCapture(capture_name)
+        self.cap = BufferlessCapture(capture_name) if capture_name is int else DirectCapture(capture_name)
         self.detector = MediaPipeHandPose(running_mode=VisionRunningMode.VIDEO)
         self.last_normal = None
         self.decay = 0.25
