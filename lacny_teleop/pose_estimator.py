@@ -62,29 +62,32 @@ class MockEstimator(PoseEstimator):
 class CircleEstimator(PoseEstimator):
     def __init__(self):
         super().__init__()
-        self.position = np.array([0.5, 0.5, 0.5])
-        self.rotation = R.from_euler('XYZ', [0.1, 0, 0])
+        self.position = np.array([0.15, 0.15, 0.15])
+        self.rotation = R.from_euler('XYZ', [0, 0, 0.1])
 
 
     def run(self):
         while not self.stop_requested:
-            new_position = self.rotation.apply(self.position)
-            delta_pos = new_position - self.position
-            self.latest_deltas = np.concatenate([delta_pos, np.array([0.05, 0.05, 0.05])])
-            self.position = new_position
+            new_location = self.rotation.apply(self.position)
+            self.position = new_location
+            new_position = np.concatenate([self.position, np.zeros(3), np.array([-1.0])])
+            self.set_position_and_update_deltas(new_position)
             time.sleep(0.1)
 
 class RotatorEstimator(PoseEstimator):
-    def __init__(self, rotation_delta):
+    def __init__(self, rotation_delta, position = None):
         super().__init__()
-        self.position = np.array([0.5, 0.5, 0.5])
+        self.position = np.array([0.5, 0.5, 0.5]) if position is None else position
         self.rotation = np.zeros(3)
         self.rotation_delta = rotation_delta
-        self.current_position = np.zeros(6)
+        print(self.rotation_delta)
+        self.current_position = np.zeros(7)
+        self.current_position[:3] = self.position
+        self.current_position[-1] = 1.0
 
 
     def run(self):
         while not self.stop_requested:
-            self.latest_deltas = np.concatenate([np.zeros(3), self.rotation_delta])
-            self.current_position += np.concatenate([np.zeros(3), self.rotation_delta])
+            self.latest_deltas = np.concatenate([np.zeros(3), self.rotation_delta, np.array([1.0])])
+            self.current_position[:6] += np.concatenate([np.zeros(3), self.rotation_delta])
             time.sleep(0.1)

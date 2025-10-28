@@ -17,7 +17,7 @@ parser.add_argument('--opencv_device', default="0")
 
 args = parser.parse_args()
 estimator = HandPoseEstimator(int(args.opencv_device) if args.opencv_device.isnumeric() else args.opencv_device)
-#estimator = RotatorEstimator(np.array([0.1,0.1,0.1]))
+#estimator = RotatorEstimator(np.array([0.0,0.0,0.1]))
 estimator.start()
 
 visualizer = o3d.visualization.Visualizer()

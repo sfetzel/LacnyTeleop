@@ -5,6 +5,7 @@ Simple teleoperation via webcam using hand pose recognition from MediaPipe and m
 
 ## Install
 - `pip install -r requirements.txt`
+- `pip install -e .`
 
 ## Try it out
 - `python -m lacny_teleop.demo.pose_estimator_accuracy` for an open3d visualization (from screenshot).
