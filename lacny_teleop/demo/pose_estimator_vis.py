@@ -1,9 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from pose_estimator import MockEstimator
-from hand_pose_estimator import HandPoseEstimator
-import threading
+
+from ..hand_pose_estimator import HandPoseEstimator
+
 from scipy.spatial.transform import Rotation as R
 import matplotlib.animation as animation
 

@@ -4,13 +4,13 @@ import time
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
-from depth_estimator import DepthAnythingEstimator
-from hands_detection.mp_hands import MediaPipeHandPose, VisionRunningMode
-from orientation import convert_hand_landmarks, calculate_normal
-from pose_estimator import PoseEstimator, GripperState
+from .depth_estimator import DepthAnythingEstimator
+from .hands_detection.mp_hands import MediaPipeHandPose, VisionRunningMode
+from .orientation import convert_hand_landmarks, calculate_normal
+from .pose_estimator import PoseEstimator, GripperState
 
-from utils.opencv_capture import BufferlessCapture
-from utils.utils import calculate_rotation_matrix, to_image_indices
+from .utils.opencv_capture import BufferlessCapture
+from .utils.utils import calculate_rotation_matrix, to_image_indices
 
 
 class HandPoseEstimator(PoseEstimator):
@@ -24,7 +24,7 @@ class HandPoseEstimator(PoseEstimator):
         self.normal_rot = None
         self.is_gripper_closed = False
         self.depth_estimator = DepthAnythingEstimator(True, self.decay)
-        self.finger_distance_threshold = 0.06
+        self.finger_distance_threshold = 0.07
 
         self.zero_pos = np.array([0, 0.5, 0.5])
         self.stretch_factors = np.array(stretch_factors if stretch_factors is not None else [1.0, 2.0, 1.0])

@@ -5,15 +5,15 @@ import time
 import numpy as np
 import open3d as o3d
 from scipy.spatial.transform import Rotation as R
-from pose_estimator import MockEstimator, CircleEstimator, RotatorEstimator, GripperState
-from hand_pose_estimator import HandPoseEstimator
+from ..pose_estimator import MockEstimator, CircleEstimator, RotatorEstimator, GripperState
+from ..hand_pose_estimator import HandPoseEstimator
 
 parser = argparse.ArgumentParser(
                     prog='LacnyTeleop',
                     description='Shows a target box in blue and a red box corresponding to the recognized hand pose.'
                                 'Try to bring the red box to the blue box. Bring your fingers and thumb together to read the distance.'
                                 'If the distance is small enough the target box will move to a new location.')
-parser.add_argument('--opencv_device', default=0)
+parser.add_argument('--opencv_device', default="0")
 
 args = parser.parse_args()
 estimator = HandPoseEstimator(int(args.opencv_device) if args.opencv_device.isnumeric() else args.opencv_device)
