@@ -4,6 +4,7 @@ import time
 import numpy as np
 from scipy.spatial.transform import Rotation as R
 
+from .grip_detector import detect_gripper_state
 from .depth_estimator import DepthAnythingEstimator
 from .hands_detection.mp_hands import MediaPipeHandPose, VisionRunningMode
 from .orientation import convert_hand_landmarks, calculate_normal
@@ -47,13 +48,7 @@ class HandPoseEstimator(PoseEstimator):
 
         depth_height, depth_width = depth.shape
         pts = np.array([[l.x, l.y, l.z] for l in hand_landmarks])
-
-        index_to_thumb_distance = np.linalg.norm(pts[8, :] - pts[4, :])
-        middle_to_thumb_distance = np.linalg.norm(pts[4, :] - pts[12, :])
-        ring_to_thumb_distance = np.linalg.norm(pts[4, :] - pts[16, :])
-        mean_distance = (index_to_thumb_distance + middle_to_thumb_distance + ring_to_thumb_distance) / 3.0
-        new_is_gripper_closed = mean_distance < self.finger_distance_threshold
-        self.is_gripper_closed = new_is_gripper_closed
+        self.is_gripper_closed = detect_gripper_state(pts) == GripperState.Closed
 
         center_of_palm = (pts[0, :] + pts[5, :] + pts[9, :] + pts[13, :] + pts[17, :]) / 5.0
         depth_y = to_image_indices(center_of_palm[1], depth_height)
