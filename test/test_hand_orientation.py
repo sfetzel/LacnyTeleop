@@ -15,6 +15,7 @@ images = os.listdir(test_folder)
 
 def get_hand_landmarks(image):
     img = cv2.imread(os.path.join(test_folder, image))
+    img = cv2.flip(img, 1)
     landmarks, handedness = detector.detect(img)
     return img, landmarks, handedness
 

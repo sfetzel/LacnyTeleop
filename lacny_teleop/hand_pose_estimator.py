@@ -55,7 +55,7 @@ class HandPoseEstimator(PoseEstimator):
         depth_x = to_image_indices(center_of_palm[0], depth_width)
         center_depth = depth[depth_y, depth_x]
         new_location = np.array([
-            1 - center_of_palm[0],
+            center_of_palm[0],
             center_depth,
             (1 - center_of_palm[1]),
         ])
@@ -76,24 +76,24 @@ class HandPoseEstimator(PoseEstimator):
                 time.sleep(0.1)
                 continue
 
+            img = cv2.flip(img, 1)
             hand_landmarker_result = self.detector.detect(img)
-
-            if self.is_paused:
-                cv2.putText(img, f"paused",
-                            (10, 10), cv2.FONT_HERSHEY_DUPLEX,
-                            0.5, np.zeros(3), 1, cv2.LINE_AA)
-            cv2.putText(img, f"Gripper: {'Closed' if self.is_gripper_closed else 'Open'}",
-                        (10, 40), cv2.FONT_HERSHEY_DUPLEX,
-                        0.5, np.zeros(3), 1, cv2.LINE_AA)
-
+            display_img = img
+            
             if hand_landmarker_result is not None:
                 self.process_result(hand_landmarker_result, img)
                 hand_landmarks, handedness = hand_landmarker_result
-                annotated_image = MediaPipeHandPose.annotate_image(img, hand_landmarks, handedness)
-                cv2.imshow('Hand detection', annotated_image)
-            else:
-                cv2.imshow('Hand detection', img)
+                display_img = MediaPipeHandPose.annotate_image(display_img, hand_landmarks, handedness)
 
+            if self.is_paused:
+                cv2.putText(display_img, f"paused",
+                            (10, 10), cv2.FONT_HERSHEY_DUPLEX,
+                            0.5, np.zeros(3), 1, cv2.LINE_AA)
+            cv2.putText(display_img, f"Gripper: {'Closed' if self.is_gripper_closed else 'Open'}",
+                        (10, 40), cv2.FONT_HERSHEY_DUPLEX,
+                        0.5, np.zeros(3), 1, cv2.LINE_AA)
+
+            cv2.imshow('Hand detection', display_img)
             key = cv2.waitKey(1) & 0xFF
             if key == ord('q'):
                 break
@@ -101,7 +101,7 @@ class HandPoseEstimator(PoseEstimator):
                 self.normal_rot = calculate_rotation_matrix(self.last_normal)
             if key == ord('z') and not self.current_position is None:
                 self.zero_pos = self.current_position[:3]
-            if key == ord('p') and not self.is_gripper_closed:
+            if key == ord('p'):
                 self.is_paused = not self.is_paused
                 print(f"Paused: {self.is_paused}")
 

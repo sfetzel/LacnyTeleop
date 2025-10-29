@@ -46,7 +46,7 @@ def convert_hand_landmarks(hand_landmarks):
     # z is measured from camera to point: larger value: farther away, smaller value: nearer.
     # for z we want: farther away: smaller value, near: large value.
     # transformation: x -> x, y -> (1-y) -> z, z -> y.
-    hand_points = [[l.x, l.z, 1 - l.y] for l in hand_landmarks]
+    hand_points = [[1-l.x, l.z, 1 - l.y] for l in hand_landmarks]
     #hand_points = [[l.x, l.y, l.z] for l in hand_landmarks]
     return hand_points
 
