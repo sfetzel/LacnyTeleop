@@ -40,3 +40,18 @@ def test_set_position_and_update_deltas_with_intermediate_calls():
     expected_delta[-1] = -1.0
     assert np.linalg.norm(actual_delta - expected_delta) < 1e-12
 
+def test_is_paused():
+    estimator = TestPoseEstimator()
+    estimator.set_position_and_update_deltas(np.array([1.0, 2, 3]))
+    estimator.is_paused = True
+    estimator.set_position_and_update_deltas(np.array([1.0, 2, 4]))
+    assert estimator.latest_deltas is None
+
+    # the hand is moved to somewhere else
+    estimator.set_position_and_update_deltas(np.array([0.0, -1.0, 0.0]))
+    # when pause is resumed, the deltas should be calculated from the new position.
+    estimator.is_paused = False
+    estimator.set_position_and_update_deltas(np.array([1.0, -1.0, 0.0]))
+    actual_delta = estimator.get_deltas()
+    expected_delta = np.array([1.0, 0.0, 0.0])
+    assert np.linalg.norm(actual_delta - expected_delta) < 1e-12

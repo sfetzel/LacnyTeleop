@@ -18,6 +18,7 @@ class PoseEstimator(ABC):
         self.current_position: Optional[np.ndarray] = None
         self.thread = None
         self.stop_requested = False
+        self.is_paused = False
         
     @abstractmethod
     def run(self):
@@ -40,17 +41,21 @@ class PoseEstimator(ABC):
             self.thread.join()
 
     def set_position_and_update_deltas(self, new_position):
-        if self.current_position is not None:
-            delta = new_position - self.current_position
+        if not self.is_paused:
+            # if not paused and current position is not none, then calculate deltas.
+            if self.current_position is not None:
+                delta = new_position - self.current_position
 
-            if self.latest_deltas is None:
-                self.latest_deltas = delta
-            else:
-                self.latest_deltas += delta
+                if self.latest_deltas is None:
+                    self.latest_deltas = delta
+                else:
+                    self.latest_deltas += delta
 
-            # the gripper value is absolute.
-            self.latest_deltas[-1] = new_position[-1]
-
+                # the gripper value is absolute.
+                self.latest_deltas[-1] = new_position[-1]
+        else:
+            # reset deltas if paused.
+            self.latest_deltas = None
         self.current_position = new_position.copy()
 
 class MockEstimator(PoseEstimator):

@@ -14,11 +14,17 @@ parser = argparse.ArgumentParser(
                                 'Try to bring the red box to the blue box. Bring your fingers and thumb together to read the distance.'
                                 'If the distance is small enough the target box will move to a new location.')
 parser.add_argument('--opencv_device', default="0")
+parser.add_argument("--relative", action="store_true", help="Use relative movements instead of absolute values")
+parser.add_argument("--finger-distance-threshold", default=0.07, help="Consider gripper closed when fingers and thumb distance is smaller than this threshold.")
 
 args = parser.parse_args()
 estimator = HandPoseEstimator(int(args.opencv_device) if args.opencv_device.isnumeric() else args.opencv_device)
+estimator.finger_distance_threshold = args.finger_distance_threshold
 #estimator = RotatorEstimator(np.array([0.0,0.0,0.1]))
+#estimator = CircleEstimator()
 estimator.start()
+
+relative_mode = args.relative
 
 visualizer = o3d.visualization.Visualizer()
 visualizer.create_window()
@@ -37,30 +43,44 @@ target_box.rotate(target_box.get_rotation_matrix_from_xyz([0, 55.0, 0]))
 
 pose_box = o3d.geometry.TriangleMesh().create_box(box_size, box_size, box_size)
 pose_box.paint_uniform_color(np.array([0.0, 0, 1.0]))
-
+pose_box_position = np.array([0.4, 0.1, 0.0])
+pose_box.translate(pose_box_position, relative=False)
 prev_rotation = None
 last_gripper_state = None
 
 def update_box(vis) -> bool:
-    global prev_rotation, target_pos, last_gripper_state
-    target = estimator.current_position
+    global prev_rotation, target_pos, last_gripper_state, pose_box_position
+    gripper_state = None
+    if relative_mode:
+        delta = estimator.get_deltas()
+        if delta is not None:
+            pose_box.translate(delta[:3], relative=True)
+            rot = R.from_euler('xyz', delta[3:6], degrees=False)
+            rot_matrix = rot.as_matrix()
+            pose_box.rotate(rot_matrix)
+            gripper_state = delta[-1]
+            pose_box_position += delta[:3]
+    else:
+        target = estimator.current_position
+        if target is not None:
+            pose_box.translate(target[:3], relative=False)
+            if prev_rotation is not None:
+                pose_box.rotate(np.linalg.inv(prev_rotation))
+            rot = R.from_euler('xyz', target[3:6], degrees=False)
+            rot_matrix = rot.as_matrix()
+            pose_box.rotate(rot_matrix)
+            prev_rotation = rot_matrix
+            gripper_state = target[-1]
+            pose_box_position = target[:3]
+    vis.update_geometry(pose_box)
 
-    if not target is None:
-        pose_box.translate(target[:3], relative=False)
-        if prev_rotation is not None:
-            pose_box.rotate(np.linalg.inv(prev_rotation))
-        rot = R.from_euler('xyz', target[3:6], degrees=False)
-        rot_matrix = rot.as_matrix()
-        pose_box.rotate(rot_matrix)
-        prev_rotation = rot_matrix
-        vis.update_geometry(pose_box)
+    if gripper_state is not None:
+        if gripper_state != last_gripper_state:
+            print(f"Gripper is: {"Closed" if gripper_state == GripperState.Closed.value else "Open"}")
+        last_gripper_state = gripper_state
 
-        if target[-1] != last_gripper_state:
-            print(f"Gripper is: {"Closed" if target[-1] == GripperState.Closed.value else "Open"}")
-        last_gripper_state = target[-1]
-
-        if target[-1] == GripperState.Closed.value:
-            distance = np.linalg.norm(target[:3] - target_pos)
+        if gripper_state == GripperState.Closed.value:
+            distance = np.linalg.norm(pose_box_position - target_pos)
             if distance < 0.2:
                 print(f"Distance to target: {distance}")
             if distance < 0.04:
@@ -72,7 +92,8 @@ def update_box(vis) -> bool:
                 target_box.translate(target_pos, relative=False)
 
     time.sleep(0.1)
-    return not target is None
+    return True
+
 
 visualizer.add_geometry(target_box)
 visualizer.add_geometry(pose_box)

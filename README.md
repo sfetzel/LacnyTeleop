@@ -10,3 +10,10 @@ Simple teleoperation via webcam using hand pose recognition from MediaPipe and m
 ## Try it out
 - `python -m lacny_teleop.demo.pose_estimator_accuracy` for an open3d visualization (from screenshot).
 - `python -m lacny_teleop.demo.pose_estimator_vis` for a matplotlib visualization.
+
+## Controls
+For opencv image window:
+- Press "q" to close the window and stop the estimator thread.
+- Press "p" to pause the calculation of delta positions.
+- Press "z" to set the current position to the origin position.
+- Press "c" to set the current orientation of the hand normal to be equal to z-axis.

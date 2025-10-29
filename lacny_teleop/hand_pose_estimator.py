@@ -95,8 +95,12 @@ class HandPoseEstimator(PoseEstimator):
                 break
             if key == ord('c') and not self.last_normal is None:
                 self.normal_rot = calculate_rotation_matrix(self.last_normal)
-            if key == ord('p') and not self.current_position is None:
+            if key == ord('z') and not self.current_position is None:
                 self.zero_pos = self.current_position[:3]
+            if key == ord('p') and not self.is_gripper_closed:
+                self.is_paused = not self.is_paused
+                print(f"Paused: {self.is_paused}")
+
         return last_timestamp
 
 
