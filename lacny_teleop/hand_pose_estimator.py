@@ -77,6 +77,15 @@ class HandPoseEstimator(PoseEstimator):
                 continue
 
             hand_landmarker_result = self.detector.detect(img)
+
+            if self.is_paused:
+                cv2.putText(img, f"paused",
+                            (10, 10), cv2.FONT_HERSHEY_DUPLEX,
+                            0.5, np.zeros(3), 1, cv2.LINE_AA)
+            cv2.putText(img, f"Gripper: {"Closed" if self.is_gripper_closed else "Open"}",
+                        (10, 40), cv2.FONT_HERSHEY_DUPLEX,
+                        0.5, np.zeros(3), 1, cv2.LINE_AA)
+
             if hand_landmarker_result is not None:
                 self.process_result(hand_landmarker_result, img)
                 hand_landmarks, handedness = hand_landmarker_result
